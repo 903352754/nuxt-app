@@ -1,307 +1,188 @@
 <template>
-  <div class="page">
-    <!-- 顶栏 -->
-    <header class="page__head">
-      <div>
-        <h1 class="page__title">用户管理</h1>
-        <p class="page__sub">登记、编辑、删除用户信息</p>
-      </div>
-      <el-button type="primary" :icon="Plus" @click="openCreate">添加用户</el-button>
-    </header>
+  <!-- 首页：平板桌面 app 风格 + 小清新背景 + 毛玻璃 -->
+  <div class="home" :style="bgStyle">
+    <div class="home__veil" />
 
-    <!-- 用户表格 -->
-    <el-card shadow="never" class="card">
-      <el-table
-        v-loading="pending"
-        :data="pagedUsers"
-        stripe
-        style="width: 100%"
-        :max-height="tableMaxHeight"
-        :empty-text="error ? '加载失败' : '暂无用户'"
+    <div class="home__content">
+      <header class="home__hero">
+        <h1 class="home__title">XiaoHome</h1>
+        <p class="home__sub">欢迎回来，选择一个应用开始吧</p>
+      </header>
+
+      <!-- 应用网格：Tailwind 响应式断点，自适应列数 -->
+      <nav
+        class="grid w-full grid-cols-2 justify-items-center gap-5 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4"
+        aria-label="应用列表"
       >
-        <el-table-column prop="name" label="姓名" min-width="120" />
-        <el-table-column prop="email" label="邮箱" min-width="200" />
-        <el-table-column prop="age" label="年龄" width="80" align="center" />
-        <el-table-column label="爱好" min-width="220">
-          <template #default="{ row }">
-            <template v-if="row.hobbies?.length">
-              <el-tag
-                v-for="h in row.hobbies"
-                :key="h"
-                type="info"
-                effect="plain"
-                class="chip"
-              >
-                {{ h }}
-              </el-tag>
-            </template>
-            <span v-else class="muted">—</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="160" align="center" fixed="right">
-          <template #default="{ row }">
-            <el-button link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="danger" :icon="Delete" @click="remove(row.id)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+        <button
+          v-for="app in apps"
+          :key="app.to"
+          type="button"
+          class="tile"
+          :class="app.tone"
+          @click="navigateTo(app.to)"
+        >
+          <span class="tile__icon">
+            <el-icon :size="30"><component :is="app.icon" /></el-icon>
+          </span>
+          <span class="tile__name">{{ app.name }}</span>
+          <span class="tile__desc">{{ app.desc }}</span>
+        </button>
+      </nav>
 
-      <!-- 分页 -->
-      <div class="pager">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          background
-        />
-      </div>
-    </el-card>
-
-    <!-- 弹窗表单 -->
-    <el-dialog
-      v-model="showModal"
-      :title="editingId ? '编辑用户' : '新增用户'"
-      width="480px"
-      :close-on-click-modal="false"
-      align-center
-    >
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-position="top"
-        @submit.prevent="submit"
-      >
-        <el-form-item label="姓名" prop="name">
-          <el-input v-model="form.name" placeholder="请输入姓名" />
-        </el-form-item>
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="form.email" type="email" placeholder="name@example.com" />
-        </el-form-item>
-        <el-form-item label="年龄" prop="age">
-          <el-input-number v-model="form.age" :min="0" :max="150" controls-position="right" />
-        </el-form-item>
-        <el-form-item label="爱好">
-          <el-input
-            v-model="hobbiesText"
-            placeholder="用逗号分隔，如：阅读, 音乐"
-          />
-          <div class="form__hint">多个爱好用英文逗号隔开</div>
-        </el-form-item>
-      </el-form>
-
-      <template #footer>
-        <el-button @click="closeModal">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submit">
-          {{ editingId ? '保存' : '添加' }}
-        </el-button>
-      </template>
-    </el-dialog>
+      <footer class="home__foot">
+        <span>{{ year }}桌面端体验</span>
+      </footer>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Plus, Edit, Delete } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import type { FormInstance, FormRules } from 'element-plus'
+import { User, InfoFilled, VideoCamera } from '@element-plus/icons-vue'
 
-interface User {
-  id: string
+interface AppItem {
   name: string
-  email: string
-  age: number
-  hobbies: string[]
+  desc: string
+  to: string
+  icon: any
+  tone: 'tile--green' | 'tile--blue' | 'tile--purple'
 }
 
-const form = reactive({ name: '', email: '', age: 0 })
-const hobbiesText = ref('')
-const editingId = ref<string | null>(null)
-const showModal = ref(false)
-const saving = ref(false)
-const formRef = ref<FormInstance>()
+const apps: AppItem[] = [
+  { name: '用户管理', desc: '登记 · 编辑 · 删除', to: '/users', icon: User, tone: 'tile--green' },
+  { name: '监控', desc: 'HLS 实时视频流', to: '/monitor', icon: VideoCamera, tone: 'tile--blue' },
+  { name: '关于', desc: '了解XiaoHome', to: '/about', icon: InfoFilled, tone: 'tile--purple' },
+]
 
-// 分页状态
-const currentPage = ref(1)
-const pageSize = ref(10)
-const tableMaxHeight = ref(400)
+const year = new Date().getFullYear()
 
-const rules: FormRules = {
-  name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-  email: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' },
-  ],
-  age: [{ required: true, message: '请输入年龄', trigger: 'blur' }],
-}
-
-// 获取用户列表
-const { data, pending, error, refresh } = await useFetch<User[]>('/api/users')
-// data 是 Ref<User[] | null>，转成 ComputedRef，让模板里 users 直接用
-const users = computed(() => data.value ?? [])
-// 出错时提示一次
-watch(error, (e) => {
-  if (e) ElMessage.error(`加载失败：${e.statusMessage || e.message}`)
-})
-
-// 总条数
-const total = computed(() => users.value.length)
-// 当前页数据（前端分页）
-const pagedUsers = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  return users.value.slice(start, start + pageSize.value)
-})
-
-// 逗号分隔字符串 → 爱好数组
-function toHobbies(text: string): string[] {
-  return text.split(',').map(s => s.trim()).filter(Boolean)
-}
-
-// 动态计算表格最大高度：视口高度 - 顶部偏移 - 底部 20px padding
-// 顶部偏移 ≈ 页面 padding-top + 标题块 + 分页栏 + 间距
-const TOP_OFFSET = 200
-function updateTableHeight() {
-  const h = window.innerHeight - TOP_OFFSET - 20
-  tableMaxHeight.value = Math.max(240, h)
-}
-onMounted(() => {
-  updateTableHeight()
-  window.addEventListener('resize', updateTableHeight)
-})
-onBeforeUnmount(() => window.removeEventListener('resize', updateTableHeight))
-
-// 删除/换页大小后，若当前页超出范围则回到最后一页
-watch([total, pageSize], () => {
-  const maxPage = Math.max(1, Math.ceil(total.value / pageSize.value))
-  if (currentPage.value > maxPage) currentPage.value = maxPage
-})
-
-// 打开新增弹窗
-function openCreate() {
-  editingId.value = null
-  form.name = ''
-  form.email = ''
-  form.age = 0
-  hobbiesText.value = ''
-  showModal.value = true
-  formRef.value?.clearValidate()
-}
-
-// 打开编辑弹窗：把用户数据填回表单
-function openEdit(u: User) {
-  editingId.value = u.id
-  form.name = u.name
-  form.email = u.email
-  form.age = u.age
-  hobbiesText.value = u.hobbies.join(', ')
-  showModal.value = true
-  formRef.value?.clearValidate()
-}
-
-function closeModal() {
-  showModal.value = false
-}
-
-// 提交：editingId 有值则 PUT 更新，否则 POST 新增
-async function submit() {
-  if (!formRef.value) return
-  await formRef.value.validate(async (valid) => {
-    if (!valid) return
-    saving.value = true
-    const payload = {
-      name: form.name,
-      email: form.email,
-      age: Number(form.age) || 0,
-      hobbies: toHobbies(hobbiesText.value),
-    }
-    try {
-      if (editingId.value) {
-        await $fetch(`/api/users/${editingId.value}`, { method: 'PUT', body: payload })
-        ElMessage.success('更新成功')
-      } else {
-        await $fetch('/api/users', { method: 'POST', body: payload })
-        ElMessage.success('添加成功')
-      }
-      showModal.value = false
-      await refresh()
-    } catch (e: any) {
-      ElMessage.error(e?.data?.statusMessage || e?.message || '提交失败')
-    } finally {
-      saving.value = false
-    }
-  })
-}
-
-// 删除用户
-async function remove(id: string) {
-  try {
-    await ElMessageBox.confirm('确认删除该用户？此操作不可撤销。', '删除确认', {
-      type: 'warning',
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-    })
-  } catch {
-    return // 用户点了取消
-  }
-  try {
-    await $fetch(`/api/users/${id}`, { method: 'DELETE' })
-    if (editingId.value === id) showModal.value = false
-    ElMessage.success('删除成功')
-    await refresh()
-  } catch (e: any) {
-    ElMessage.error(e?.data?.statusMessage || e?.message || '删除失败')
-  }
-}
+/* 小清新风格背景图，按规范走 text_to_image 接口 */
+const bgPrompt =
+  'A serene fresh spring morning nature scene, soft pastel green foliage and tiny white flowers, gentle sunlight bokeh, clean minimalist, light and airy watercolor texture, no text, no people'
+const bgUrl = computed(
+  () =>
+    `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(
+      bgPrompt,
+    )}&image_size=landscape_16_9`,
+)
+const bgStyle = computed(() => ({
+  backgroundImage: `url("${bgUrl.value}")`,
+}))
 </script>
 
 <style scoped lang="scss">
-.page {
-  max-width: 960px;
+.home {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+/* 毛玻璃遮罩 + 柔和清新色调 */
+.home__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(236, 253, 245, 0.55),
+    rgba(224, 242, 254, 0.45)
+  );
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.home__content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: var(--app-max-width, 1600px);
   margin: 0 auto;
-  padding: 20px;
-}
-
-.page__head {
+  padding: 2.5rem 1.25rem 2rem;
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
 }
-.page__title {
+
+.home__hero {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+.home__title {
   margin: 0;
-  font-size: 24px;
-  font-weight: 700;
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #0f172a;
+  text-shadow: 0 2px 12px rgba(255, 255, 255, 0.6);
 }
-.page__sub {
-  margin: 4px 0 0;
-  color: var(--el-text-color-secondary);
-  font-size: 14px;
+.home__sub {
+  margin: 0.6rem 0 0;
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+  color: #334155;
 }
 
-.card {
-  border-radius: 12px;
-}
-
-/* 分页栏 */
-.pager {
+/* 单个应用卡片：毛玻璃 */
+.tile {
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 3 / 4;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  cursor: pointer;
   display: flex;
-  justify-content: flex-end;
-  padding: 16px 0 4px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+.tile:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.14);
+}
+.tile:active {
+  transform: translateY(-1px) scale(0.99);
 }
 
-/* 爱好标签间距 */
-.chip {
-  margin: 2px 6px 2px 0;
+.tile__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  color: #fff;
+  margin-bottom: 0.25rem;
 }
-.muted {
-  color: var(--el-text-color-placeholder);
+.tile--green .tile__icon { background: linear-gradient(135deg, #6ee7b7, #10b981); box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4); }
+.tile--blue  .tile__icon { background: linear-gradient(135deg, #7dd3fc, #3b82f6); box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4); }
+.tile--purple .tile__icon { background: linear-gradient(135deg, #c4b5fd, #8b5cf6); box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4); }
+
+.tile__name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
 }
-.form__hint {
-  font-size: 12px;
-  color: var(--el-text-color-placeholder);
-  line-height: 1.4;
-  margin-top: 4px;
+.tile__desc {
+  font-size: 0.8rem;
+  color: #475569;
+}
+
+.home__foot {
+  margin-top: 2.5rem;
+  font-size: 0.8rem;
+  color: #475569;
 }
 </style>

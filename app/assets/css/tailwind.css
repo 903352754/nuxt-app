@@ -1,0 +1,21 @@
+/*
+ * Tailwind CSS v4 入口
+ * 仅引入 theme 与 utilities，关闭 preflight(base)，
+ * 避免其重置按钮 / 表格 / 表单等样式与 Element Plus 冲突。
+ * 响应式工具类（flex / grid / 断点 / spacing）全部可用。
+ */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/utilities" layer(utilities);
+
+/* 与 Tailwind 断点保持一致的容器宽度变量，供布局使用 */
+@layer base {
+  :root {
+    --app-header-height: 4rem; /* 64px 顶栏高度 */
+    --app-max-width: 1600px;
+  }
+}
+
+/* Tailwind v4 默认断点：
+ * sm 640 / md 768 / lg 1024 / xl 1280 / 2xl 1536
+ */

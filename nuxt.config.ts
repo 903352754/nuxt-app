@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import tailwindcss from '@tailwindcss/vite'
+
 export default defineNuxtConfig({
   devtools: { enabled: true },
   $production:{
@@ -14,7 +16,13 @@ export default defineNuxtConfig({
   },
   app:{
     head:{
-      title:'nuxt-app'
+      title:'XiaoHome',
+      htmlAttrs:{ lang:'zh-CN' },
+      meta:[
+        { charset:'utf-8' },
+        { name:'viewport', content:'width=device-width, initial-scale=1, viewport-fit=cover' },
+        { name:'description', content:'XiaoHome - 桌面式应用首页' }
+      ]
     }
   },
   nitro: {
@@ -23,6 +31,7 @@ export default defineNuxtConfig({
     }
   },
   vite:{
+    plugins:[tailwindcss()],
     vueJsx:{
       mergeProps:true,
     },
@@ -35,7 +44,7 @@ export default defineNuxtConfig({
       }
     }
   },
-  css:['~/assets/css/main.css','animate.css','~/assets/scss/main.scss'],
+  css:['~/assets/css/tailwind.css','~/assets/css/main.css','animate.css','~/assets/scss/main.scss'],
   modules: ['@element-plus/nuxt'],
   elementPlus: {
     // 按需导入样式（默认开启，设为 false 则全量引入）
