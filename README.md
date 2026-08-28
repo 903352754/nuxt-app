@@ -1,8 +1,16 @@
-# Nuxt Minimal Starter
+# Nuxt App
 
 Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
-## Setup
+## 注意事项
+
+```bash
+部署在服务器 只需要 ecosystem.config.cjs文件 和 .output目录 在同一层级，
+使用pm2管理器运行 pm2 start ecosystem.config.cjs 即可,
+原则上来说 ecosystem.config.cjs文件 不可公开存放，
+内部有mongodb的uri可直接连接数据库,
+且此项目mongodb依赖版本锁定5.9.2,其他版本打包后会出现兼容性问题导致无法连接数据库
+```
 
 Make sure to install dependencies:
 
