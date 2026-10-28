@@ -1,9 +1,9 @@
 export default defineAppConfig({
-    title:'hello nuxt',
-    theme:{
-        dark:true,
-        colors:{
-            primary:'#ff0000',
-        }
-    }
+  title: 'XiaoHome',
+  theme: {
+    dark: true,
+    colors: {
+      primary: '#22d3ee',
+    },
+  },
 })
