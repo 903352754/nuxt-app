@@ -2,17 +2,45 @@
 
 Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
-## 注意事项
+## 部署（PM2 + Node）
+
+构建产物 `.output` 是自包含的（依赖已内联到 `.output/server/node_modules`），
+服务器上**不需要** `npm install`，只需要这三样东西放在同一层级：
+
+```
+nuxt-app/
+├── .output/              # 构建产物
+├── ecosystem.config.cjs  # PM2 配置
+└── .env                  # NUXT_MONGODB_URI（chmod 600，切勿提交）
+```
 
 ```bash
-部署在服务器 只需要 ecosystem.config.cjs文件 和 .output目录 在同一层级，
-使用pm2管理器运行 pm2 start ecosystem.config.cjs 即可,
-原则上来说 ecosystem.config.cjs文件 不可公开存放，
-内部有mongodb的uri可直接连接数据库,
-且此项目mongodb依赖版本锁定5.9.2,其他版本打包后会出现兼容性问题导致无法连接数据库
+# 1. 本机构建
+npm run build
 
-在线免费mongodb数据库:https://www.mongodb.com/zh-cn/products/platform
+# 2. 上传（.env 单独传，或用服务器上已有的）
+scp -r .output ecosystem.config.cjs user@server:/opt/xiaohome/
+scp .env user@server:/opt/xiaohome/ && ssh user@server 'chmod 600 /opt/xiaohome/.env'
+
+# 3. 启动
+cd /opt/xiaohome
+pm2 start ecosystem.config.cjs
+pm2 save && pm2 startup     # 开机自启，按提示复制执行输出的命令
 ```
+
+要点：
+
+- **Node ≥ 20**（本项目在 Node 24 上构建/验证）
+- 连接串由 `ecosystem.config.cjs` 从 `.env` 读取并注入；shell 里已存在的
+  `NUXT_MONGODB_URI` 优先级更高，可用于临时覆盖
+- 运行时注入优先于构建时值：构建机器上没有数据库凭据也能部署
+- `PORT` / `HOST` 可在 `.env` 或 shell 中覆盖，默认 `3000` / `0.0.0.0`
+- **只用单实例**（不要 `-i max`）：应用用进程内缓存持有 Mongo 连接池
+- MongoDB Atlas 的 Network Access 必须放行服务器出口 IP
+- 不要用 `npm run generate`，本项目有服务端 API（`/api/**`）
+- `ecosystem.config.cjs` 与 `.env` 都含凭据，不要公开存放
+
+在线免费 mongodb 数据库: https://www.mongodb.com/zh-cn/products/platform
 
 Make sure to install dependencies:
 
