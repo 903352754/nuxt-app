@@ -1,9 +1,9 @@
-import { getUsersCollection, toObjectId } from '../../utils/db'
+import { getUsersCollection, toUserId } from '../../utils/db'
 
 export default defineEventHandler(async (event) => {
   const collection = await getUsersCollection()
   const id = getRouterParam(event, 'id')!
-  const _id = toObjectId(id)
+  const _id = toUserId(id)
 
   // GET 请求 → 单个用户
   if (event.method === 'GET') {
