@@ -5,13 +5,17 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   $production:{
     routeRules:{
-      '/**':{isr:true}
+      // 页面要按请求 Cookie 判定登录态，任何 ISR / 静态缓存都会把 A 用户的
+      // 已登录页面发给 B 用户，因此生产环境统一关闭缓存
+      '/**':{isr:false}
     }
   },
   runtimeConfig:{
     mongodbUri: process.env.NUXT_MONGODB_URI || '',
     // 语音合成（MiMo-V2.5-TTS）：仅服务端可见，不会下发到浏览器
     mimoApiKey: process.env.NUXT_MIMO_API_KEY || '',
+    // 登录会话 JWT 签名密钥（HS256），生产环境必须配置，开发环境有兜底值
+    jwtSecret: process.env.NUXT_JWT_SECRET || '',
     public:{
       base: '/api'
     }

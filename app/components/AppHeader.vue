@@ -35,6 +35,10 @@
             <el-icon :size="16"><UserFilled /></el-icon>
           </button>
           <template #dropdown>
+            <div class="who">
+              <span class="tech-label">SIGNED IN AS</span>
+              <strong class="who__name">{{ user?.name || '未登录' }}</strong>
+            </div>
             <el-dropdown-menu>
               <el-dropdown-item command="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
@@ -93,6 +97,7 @@ import { ElMessage } from 'element-plus'
 const route = useRoute()
 const menuOpen = ref(false)
 const clock = useClock()
+const { user, logout } = useAuth()
 
 const nav = [
   { label: '总览', to: '/', icon: HomeFilled, index: '00' },
@@ -121,10 +126,11 @@ onBeforeUnmount(() => {
 // 路由变化时收起移动端菜单
 watch(() => route.fullPath, () => (menuOpen.value = false))
 
-function onCommand(cmd: string) {
+async function onCommand(cmd: string) {
   if (cmd !== 'logout') return
+  await logout()
   ElMessage.success('已退出登录')
-  navigateTo('/login')
+  await navigateTo('/login')
 }
 </script>
 
@@ -276,6 +282,25 @@ function onCommand(cmd: string) {
     transform: translateY(-1px);
     box-shadow: 0 0 18px rgba(34, 211, 238, 0.3);
   }
+}
+
+/* 下拉里的当前用户 */
+.who {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 168px;
+  padding: 8px 16px 10px;
+  border-bottom: 1px solid $line;
+}
+
+.who__name {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: $text;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .menu-btn {

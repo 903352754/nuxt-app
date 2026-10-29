@@ -51,7 +51,6 @@
 <script setup lang="ts">
 definePageMeta({
   title: '关于',
-  middleware: 'auth',
 })
 
 const specs = [

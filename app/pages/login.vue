@@ -98,9 +98,14 @@
           </el-button>
         </el-form>
 
+        <p v-if="errorText" class="login__error" role="alert">
+          <el-icon :size="14"><WarningFilled /></el-icon>
+          <span>{{ errorText }}</span>
+        </p>
+
         <p class="login__tip">
           <el-icon :size="14"><InfoFilled /></el-icon>
-          <span>演示环境：尚未接入真实鉴权，任意账号密码都可以登录。</span>
+          <span>演示环境：任意账号密码都可以登录，服务端会签发 7 天有效的 JWT 会话。</span>
         </p>
       </section>
     </div>
@@ -108,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { InfoFilled, Lock, Right, User } from '@element-plus/icons-vue'
+import { InfoFilled, Lock, Right, User, WarningFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
 definePageMeta({
@@ -116,13 +121,28 @@ definePageMeta({
   title: '登录',
 })
 
+const route = useRoute()
+const { login } = useAuth()
+
 const account = ref('')
 const password = ref('')
 const loading = ref(false)
+const errorText = ref('')
 const accountEl = ref<{ focus: () => void } | null>(null)
 
 onMounted(() => {
   accountEl.value?.focus()
+})
+
+// 只接受站内路径，避免 ?redirect= 被用来跳外站
+const redirectTo = computed(() => {
+  const target = route.query.redirect
+  if (typeof target !== 'string' || !target.startsWith('/') || target.startsWith('//')) return '/'
+  return target
+})
+
+watch([account, password], () => {
+  if (errorText.value) errorText.value = ''
 })
 
 async function submit() {
@@ -133,13 +153,22 @@ async function submit() {
     return
   }
 
+  errorText.value = ''
   loading.value = true
-  // 演示用：不做真实校验，短暂延时模拟请求后直接进入
-  await new Promise(r => setTimeout(r, 600))
-  loading.value = false
 
-  ElMessage.success(`欢迎回来，${account.value.trim()}`)
-  await navigateTo('/')
+  try {
+    const user = await login(account.value.trim(), password.value)
+    ElMessage.success(`欢迎回来，${user.name}`)
+    await navigateTo(redirectTo.value)
+  }
+  catch (err) {
+    const e = err as { data?: { message?: string }, statusCode?: number }
+    errorText.value = e?.data?.message
+      || (e?.statusCode === 429 ? '登录尝试过于频繁，请稍后再试' : '登录失败，请检查网络后重试')
+  }
+  finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -387,6 +416,25 @@ async function submit() {
 
 .login__submitIcon {
   margin-left: 6px;
+}
+
+.login__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: $radius-sm;
+  background: rgba(248, 113, 113, 0.08);
+  font-size: 0.74rem;
+  line-height: 1.6;
+  color: $danger;
+
+  .el-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
 }
 
 .login__tip {

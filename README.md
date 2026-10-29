@@ -6,6 +6,7 @@ Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduct
 
 | 路由 | 说明 |
 | --- | --- |
+| `/login` | 登录：签发 7 天有效的 JWT 会话（演示：任意非空账号密码） |
 | `/` | 总览：系统信息终端、功能入口 |
 | `/users` | 用户管理：增删改查、分页、移动端卡片视图 |
 | `/monitor` | 监控：HLS（m3u8）多路视频流 |
@@ -14,6 +15,18 @@ Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduct
 
 语音合成通过 `POST /api/tts` 代理调用小米 MiMo 接口，API Key 只存在服务端
 （`NUXT_MIMO_API_KEY`），不会下发到浏览器；接口内置每 IP 每分钟 6 次的限流。
+
+## 登录与鉴权
+
+- 会话是 HS256 JWT，存放在 **httpOnly** Cookie `xh_token` 里（7 天有效，HTTPS 下自动加 `Secure`），
+  浏览器 JS 读不到，前端只通过 `GET /api/auth/me` 拿当前用户。
+- 未登录访问任意页面：服务端直接 302 到 `/login?redirect=<原路径>`，登录成功后跳回原路径；
+  客户端路由切换由 `app/middleware/auth.global.ts` 兜底。
+- 所有 `/api/**`（`/api/auth/login`、`/api/auth/logout` 除外）都要求有效 JWT，未登录返回 401。
+- 当前**没有用户库**：任意非空账号 + 密码都会通过，然后由服务端签发会话（仅演示）。
+- 生产环境必须在 `.env` 配置 `NUXT_JWT_SECRET`（`openssl rand -hex 32`），
+  缺失时登录接口返回 500；开发环境有内置兜底密钥。
+- 登录接口按 IP 限流：每分钟 15 次，超出返回 429 + `retry-after`。
 
 ## 部署（PM2 + Node）
 
@@ -24,7 +37,7 @@ Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduct
 nuxt-app/
 ├── .output/              # 构建产物
 ├── ecosystem.config.cjs  # PM2 配置
-└── .env                  # NUXT_MONGODB_URI、NUXT_MIMO_API_KEY（chmod 600，切勿提交）
+└── .env                  # NUXT_MONGODB_URI、NUXT_MIMO_API_KEY、NUXT_JWT_SECRET（chmod 600，切勿提交）
 ```
 
 ```bash
