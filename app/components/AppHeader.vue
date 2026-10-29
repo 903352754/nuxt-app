@@ -36,9 +36,7 @@
           </button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="home">返回首页</el-dropdown-item>
-              <el-dropdown-item command="about">关于</el-dropdown-item>
-              <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+              <el-dropdown-item command="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -124,17 +122,9 @@ onBeforeUnmount(() => {
 watch(() => route.fullPath, () => (menuOpen.value = false))
 
 function onCommand(cmd: string) {
-  switch (cmd) {
-    case 'home':
-      navigateTo('/')
-      break
-    case 'about':
-      navigateTo('/about')
-      break
-    case 'logout':
-      ElMessage.info('退出登录（演示）')
-      break
-  }
+  if (cmd !== 'logout') return
+  ElMessage.success('已退出登录')
+  navigateTo('/login')
 }
 </script>
 
