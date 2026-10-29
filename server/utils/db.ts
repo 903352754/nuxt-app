@@ -8,6 +8,10 @@ export interface UserDoc {
   email: string
   age: number
   hobbies: string[]
+  /** 登录密码哈希（scrypt$salt$hash）；通过 /register 或直接写库创建 */
+  passwordHash?: string
+  createdAt?: Date
+  lastLoginAt?: Date
 }
 
 const globalAny = globalThis as any

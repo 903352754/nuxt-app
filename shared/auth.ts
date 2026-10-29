@@ -15,6 +15,11 @@ export const AUTH_COOKIE = 'xh_token'
 /** 会话有效期（天） */
 export const AUTH_MAX_AGE_DAYS = 7
 
-/** 账号 / 密码长度上限（仅防御超大 payload，不限制具体内容） */
+/** 账号 / 密码长度限制 */
+export const AUTH_NAME_MIN = 2
 export const AUTH_NAME_MAX = 32
+export const AUTH_PASSWORD_MIN = 8
 export const AUTH_PASSWORD_MAX = 128
+
+/** 邮箱长度上限 */
+export const AUTH_EMAIL_MAX = 120

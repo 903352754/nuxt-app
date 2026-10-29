@@ -5,7 +5,7 @@
       <aside class="login__aside">
         <div class="login__asideTop">
           <span class="tech-label">ACCESS CONTROL</span>
-          <span class="login__badge">DEMO</span>
+          <span class="login__badge">SECURE</span>
         </div>
 
         <div class="login__glyph">
@@ -20,9 +20,9 @@
 
         <dl class="login__rows">
           <div class="login__row">
-            <dt>鉴权模式</dt>
+            <dt>账号来源</dt>
             <span class="login__dots" />
-            <dd>演示 / 任意凭据</dd>
+            <dd>MongoDB / users</dd>
           </div>
           <div class="login__row">
             <dt>当前会话</dt>
@@ -63,7 +63,7 @@
               ref="accountEl"
               v-model="account"
               size="large"
-              placeholder="任意账号，例如 admin"
+              placeholder="用户名或邮箱，例如 admin"
               :prefix-icon="User"
               autocomplete="username"
               aria-label="账号"
@@ -75,7 +75,7 @@
               v-model="password"
               size="large"
               type="password"
-              placeholder="任意密码"
+              placeholder="请输入密码"
               :prefix-icon="Lock"
               show-password
               autocomplete="current-password"
@@ -103,9 +103,9 @@
           <span>{{ errorText }}</span>
         </p>
 
-        <p class="login__tip">
-          <el-icon :size="14"><InfoFilled /></el-icon>
-          <span>演示环境：任意账号密码都可以登录，服务端会签发 7 天有效的 JWT 会话。</span>
+        <p class="login__alt">
+          <span>还没有账号？</span>
+          <NuxtLink :to="registerLink">立即注册</NuxtLink>
         </p>
       </section>
     </div>
@@ -113,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { InfoFilled, Lock, Right, User, WarningFilled } from '@element-plus/icons-vue'
+import { Lock, Right, User, WarningFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
 definePageMeta({
@@ -140,6 +140,11 @@ const redirectTo = computed(() => {
   if (typeof target !== 'string' || !target.startsWith('/') || target.startsWith('//')) return '/'
   return target
 })
+
+const registerLink = computed(() => ({
+  path: '/register',
+  query: typeof route.query.redirect === 'string' ? { redirect: route.query.redirect } : {},
+}))
 
 watch([account, password], () => {
   if (errorText.value) errorText.value = ''
@@ -243,13 +248,13 @@ async function submit() {
 
 .login__badge {
   padding: 1px 8px;
-  border: 1px solid rgba(251, 191, 36, 0.4);
+  border: 1px solid rgba(34, 211, 238, 0.4);
   border-radius: 999px;
   font-family: $font-mono;
   font-size: 0.58rem;
   letter-spacing: 0.18em;
-  color: $warn;
-  background: rgba(251, 191, 36, 0.08);
+  color: $primary;
+  background: rgba(34, 211, 238, 0.08);
 }
 
 .login__glyph {
@@ -437,23 +442,27 @@ async function submit() {
   }
 }
 
-.login__tip {
+.login__alt {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   margin: 0;
-  padding: 10px 12px;
-  border: 1px dashed rgba(122, 190, 255, 0.18);
-  border-radius: $radius-sm;
-  background: rgba(122, 190, 255, 0.04);
-  font-size: 0.72rem;
-  line-height: 1.6;
-  color: $faint;
+  padding-top: 14px;
+  border-top: 1px solid $line;
+  font-size: 0.76rem;
+  color: $muted;
 
-  .el-icon {
-    flex-shrink: 0;
-    margin-top: 2px;
-    color: $muted;
+  a {
+    color: $primary;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: $primary-hover;
+      text-decoration: underline;
+    }
   }
 }
 
@@ -473,10 +482,6 @@ async function submit() {
   .login__panel {
     gap: 16px;
     padding: 22px 18px;
-  }
-
-  .login__tip {
-    font-size: 0.7rem;
   }
 }
 </style>

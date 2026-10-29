@@ -8,7 +8,10 @@
 const PUBLIC_PATHS = new Set([
   '/login',
   '/login/',
+  '/register',
+  '/register/',
   '/api/auth/login',
+  '/api/auth/register',
   '/api/auth/logout',
 ])
 

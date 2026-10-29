@@ -6,7 +6,8 @@ Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduct
 
 | 路由 | 说明 |
 | --- | --- |
-| `/login` | 登录：签发 7 天有效的 JWT 会话（演示：任意非空账号密码） |
+| `/login` | 登录：查 `users` 集合校验密码，签发 7 天有效的 JWT 会话 |
+| `/register` | 注册：用户名 + 邮箱 + 密码，成功即自动登录 |
 | `/` | 总览：系统信息终端、功能入口 |
 | `/users` | 用户管理：增删改查、分页、移动端卡片视图 |
 | `/monitor` | 监控：HLS（m3u8）多路视频流 |
@@ -18,15 +19,20 @@ Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduct
 
 ## 登录与鉴权
 
+- 账号存放在 MongoDB `db1.users`：登录按**用户名或邮箱**查库，密码用 Node 内置
+  **scrypt** 加盐哈希（格式 `scrypt$salt$hash`）比对，服务端不保存明文；
+  `passwordHash` 不会出现在 `/api/users` 的响应里。
+- 注册页 `POST /api/auth/register` 会新建一条 user（`age: 0`、`hobbies: []`），
+  用户名 / 邮箱重复返回 409；注册成功直接写 Cookie 登录。用户管理页新建的记录没有密码，无法用于登录。
 - 会话是 HS256 JWT，存放在 **httpOnly** Cookie `xh_token` 里（7 天有效，HTTPS 下自动加 `Secure`），
   浏览器 JS 读不到，前端只通过 `GET /api/auth/me` 拿当前用户。
 - 未登录访问任意页面：服务端直接 302 到 `/login?redirect=<原路径>`，登录成功后跳回原路径；
   客户端路由切换由 `app/middleware/auth.global.ts` 兜底。
-- 所有 `/api/**`（`/api/auth/login`、`/api/auth/logout` 除外）都要求有效 JWT，未登录返回 401。
-- 当前**没有用户库**：任意非空账号 + 密码都会通过，然后由服务端签发会话（仅演示）。
+- 所有 `/api/**`（登录 / 注册 / 退出除外）都要求有效 JWT，未登录返回 401。
 - 生产环境必须在 `.env` 配置 `NUXT_JWT_SECRET`（`openssl rand -hex 32`），
   缺失时登录接口返回 500；开发环境有内置兜底密钥。
-- 登录接口按 IP 限流：每分钟 15 次，超出返回 429 + `retry-after`。
+- 限流：登录每 IP 每分钟 15 次、注册每分钟 5 次，超出返回 429 + `retry-after`。
+- 退出登录只清 Cookie（无状态 JWT），已泄露的 token 在过期前仍有效；需要「立即踢下线」要另加撤销表。
 
 ## 部署（PM2 + Node）
 

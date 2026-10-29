@@ -37,6 +37,16 @@ export function useAuth() {
     return data.user
   }
 
+  async function register(name: string, email: string, password: string) {
+    const data = await $fetch<{ user: AuthUser }>('/api/auth/register', {
+      method: 'POST',
+      body: { name, email, password },
+    })
+    user.value = data.user
+    resolved.value = true
+    return data.user
+  }
+
   async function logout() {
     try {
       await $fetch('/api/auth/logout', { method: 'POST' })
@@ -47,5 +57,5 @@ export function useAuth() {
     }
   }
 
-  return { user, resolved, fetchUser, login, logout }
+  return { user, resolved, fetchUser, login, register, logout }
 }

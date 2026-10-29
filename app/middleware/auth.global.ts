@@ -4,7 +4,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   if (!resolved.value) await fetchUser()
 
-  if (to.path === '/login') {
+  const isPublicPage = to.path === '/login' || to.path === '/register'
+
+  if (isPublicPage) {
     if (user.value) return navigateTo('/')
     return
   }
