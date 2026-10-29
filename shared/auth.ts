@@ -7,6 +7,21 @@
 export interface AuthUser {
   id: string
   name: string
+  role: AuthRole
+}
+
+export type AuthRole = 'admin' | 'user'
+
+/** 权限选项（页面下拉与校验共用） */
+export const AUTH_ROLES = [
+  { id: 'admin', label: '管理员' },
+  { id: 'user', label: '普通用户' },
+] as const
+
+export const DEFAULT_AUTH_ROLE: AuthRole = 'user'
+
+export function isAuthRole(value: unknown): value is AuthRole {
+  return value === 'admin' || value === 'user'
 }
 
 /** 存放 JWT 的 Cookie 名 */

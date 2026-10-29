@@ -9,7 +9,7 @@ Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduct
 | `/login` | 登录：查 `users` 集合校验密码，签发 7 天有效的 JWT 会话 |
 | `/register` | 注册：用户名 + 邮箱 + 密码，成功即自动登录 |
 | `/` | 总览：系统信息终端、功能入口 |
-| `/users` | 用户管理：增删改查、分页、移动端卡片视图 |
+| `/users` | 用户管理：增删改查、分页、移动端卡片视图、权限调整（仅管理员） |
 | `/monitor` | 监控：HLS（m3u8）多路视频流 |
 | `/tts` | 语音合成：MiMo-V2.5-TTS，9 种预置音色，mp3 / wav 试听与下载 |
 | `/about` | 关于：技术栈与运行环境 |
@@ -22,8 +22,18 @@ Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduct
 - 账号存放在 MongoDB `db1.users`：登录按**用户名或邮箱**查库，密码用 Node 内置
   **scrypt** 加盐哈希（格式 `scrypt$salt$hash`）比对，服务端不保存明文；
   `passwordHash` 不会出现在 `/api/users` 的响应里。
-- 注册页 `POST /api/auth/register` 会新建一条 user（`age: 0`、`hobbies: []`），
+- 注册页 `POST /api/auth/register` 会新建一条 user（`age: 0`、`hobbies: []`、`role: 'user'`），
   用户名 / 邮箱重复返回 409；注册成功直接写 Cookie 登录。用户管理页新建的记录没有密码，无法用于登录。
+- **权限**：`users.role` 为 `admin` / `user`（缺省按 `user` 处理），注册账号默认普通用户。
+  - `/users` 页面与 `/api/users/**` 仅管理员可访问：页面请求会被 302 回首页，接口返回 403；
+    角色每次请求都从库里读，改权限后立即生效，不用等 JWT 过期。
+  - 非管理员的导航 / 首页入口不显示「用户管理」。
+  - 管理员可在用户管理页（表格或移动端卡片上的权限标签、编辑弹窗）修改权限；
+    为避免自锁，不能修改自己的权限，也不能删除当前登录账号。
+  - 第一个管理员用脚本提升（账号需先通过注册页创建）：
+    ```bash
+    npm run set-role -- <用户名或邮箱> admin
+    ```
 - 会话是 HS256 JWT，存放在 **httpOnly** Cookie `xh_token` 里（7 天有效，HTTPS 下自动加 `Secure`），
   浏览器 JS 读不到，前端只通过 `GET /api/auth/me` 拿当前用户。
 - 未登录访问任意页面：服务端直接 302 到 `/login?redirect=<原路径>`，登录成功后跳回原路径；

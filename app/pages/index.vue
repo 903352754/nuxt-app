@@ -17,10 +17,12 @@
         </p>
 
         <div class="hero__actions">
-          <el-button type="primary" @click="navigateTo('/users')">
+          <el-button v-if="isAdmin" type="primary" @click="navigateTo('/users')">
             进入用户管理
           </el-button>
-          <el-button @click="navigateTo('/monitor')">查看监控</el-button>
+          <el-button :type="isAdmin ? 'default' : 'primary'" @click="navigateTo('/monitor')">
+            查看监控
+          </el-button>
         </div>
       </div>
 
@@ -116,15 +118,17 @@ interface AppItem {
   tone: 'cyan' | 'indigo' | 'violet' | 'mint'
 }
 
-const apps: AppItem[] = [
+const bp = useBreakpoint()
+const clock = useClock()
+const { isAdmin } = useAuth()
+
+const apps = computed<AppItem[]>(() => [
   { name: '用户管理', desc: '登记 · 编辑 · 删除，支持分页与移动端卡片视图', to: '/users', icon: User, tone: 'cyan' },
   { name: '监控', desc: 'HLS 实时视频流接入与多路画面切换', to: '/monitor', icon: VideoCamera, tone: 'indigo' },
   { name: '语音合成', desc: '文本转语音，多音色合成，在线试听与下载', to: '/tts', icon: Microphone, tone: 'violet' },
   { name: '关于', desc: '技术栈、运行环境与版本信息', to: '/about', icon: InfoFilled, tone: 'mint' },
-]
+].filter(item => item.to !== '/users' || isAdmin.value))
 
-const bp = useBreakpoint()
-const clock = useClock()
 const env = computed(() => (import.meta.dev ? 'DEV' : 'PROD'))
 </script>
 

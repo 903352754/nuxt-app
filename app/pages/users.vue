@@ -58,6 +58,41 @@
             </span>
           </div>
 
+          <div class="ucard__role">
+            <span class="tech-label">权限</span>
+            <el-dropdown
+              trigger="click"
+              :disabled="u.id === currentUserId"
+              @command="role => changeRole(u, role as AuthRole)"
+            >
+              <span
+                class="role"
+                :class="{ 'is-self': u.id === currentUserId }"
+                :title="u.id === currentUserId ? '不能修改自己的权限' : '点击修改权限'"
+              >
+                <el-tag
+                  :type="u.role === 'admin' ? 'warning' : 'info'"
+                  effect="plain"
+                  size="small"
+                >
+                  {{ roleLabel(u.role) }}
+                </el-tag>
+                <el-icon v-if="u.id !== currentUserId" :size="12"><ArrowDown /></el-icon>
+              </span>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item
+                    v-for="role in AUTH_ROLES"
+                    :key="role.id"
+                    :command="role.id"
+                  >
+                    {{ role.label }}
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
+
           <div v-if="u.hobbies?.length" class="ucard__tags">
             <el-tag v-for="h in u.hobbies" :key="h" size="small" effect="plain">{{ h }}</el-tag>
           </div>
@@ -119,6 +154,42 @@
             </template>
           </el-table-column>
 
+          <el-table-column label="权限" width="132" align="center">
+            <template #default="{ row }">
+              <el-dropdown
+                trigger="click"
+                :disabled="row.id === currentUserId"
+                @command="role => changeRole(row, role as AuthRole)"
+              >
+                <span
+                  class="role"
+                  :class="{ 'is-self': row.id === currentUserId }"
+                  :title="row.id === currentUserId ? '不能修改自己的权限' : '点击修改权限'"
+                >
+                  <el-tag
+                    :type="row.role === 'admin' ? 'warning' : 'info'"
+                    effect="plain"
+                    size="small"
+                  >
+                    {{ roleLabel(row.role) }}
+                  </el-tag>
+                  <el-icon v-if="row.id !== currentUserId" :size="12"><ArrowDown /></el-icon>
+                </span>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item
+                      v-for="role in AUTH_ROLES"
+                      :key="role.id"
+                      :command="role.id"
+                    >
+                      {{ role.label }}
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </template>
+          </el-table-column>
+
           <el-table-column label="操作" width="150" align="right" fixed="right">
             <template #default="{ row }">
               <el-button link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
@@ -171,6 +242,27 @@
           <el-input v-model="hobbiesText" placeholder="用逗号分隔，如：阅读, 音乐" />
           <div class="form__hint">多个爱好用英文逗号隔开</div>
         </el-form-item>
+        <el-form-item label="权限" prop="role">
+          <el-select
+            v-model="form.role"
+            :disabled="!!editingId && editingId === currentUserId"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="role in AUTH_ROLES"
+              :key="role.id"
+              :label="role.label"
+              :value="role.id"
+            />
+          </el-select>
+          <div class="form__hint">
+            {{
+              editingId === currentUserId
+                ? '不能修改自己的权限'
+                : '管理员可访问用户管理；注册账号默认为普通用户'
+            }}
+          </div>
+        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -185,6 +277,7 @@
 
 <script setup lang="ts">
 import {
+  ArrowDown,
   Delete,
   Edit,
   Plus,
@@ -193,6 +286,7 @@ import {
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+import { AUTH_ROLES, isAuthRole, type AuthRole } from '#shared/auth'
 
 definePageMeta({
   title: '用户管理',
@@ -204,11 +298,20 @@ interface User {
   email: string
   age?: number
   hobbies?: string[]
+  role?: AuthRole
 }
 
 const { isMobile } = useBreakpoint()
+const { user } = useAuth()
 
-const form = reactive({ name: '', email: '', age: 0 })
+const currentUserId = computed(() => user.value?.id ?? '')
+
+const form = reactive({
+  name: '',
+  email: '',
+  age: 0,
+  role: 'user' as AuthRole,
+})
 const hobbiesText = ref('')
 const editingId = ref<string | null>(null)
 const showModal = ref(false)
@@ -226,6 +329,7 @@ const rules: FormRules = {
     { type: 'email', message: '邮箱格式不正确', trigger: 'blur' },
   ],
   age: [{ required: true, message: '请输入年龄', trigger: 'blur' }],
+  role: [{ required: true, message: '请选择权限', trigger: 'change' }],
 }
 
 // 获取用户列表
@@ -272,6 +376,7 @@ function openCreate() {
   form.name = ''
   form.email = ''
   form.age = 0
+  form.role = 'user'
   hobbiesText.value = ''
   showModal.value = true
   formRef.value?.clearValidate()
@@ -282,6 +387,7 @@ function openEdit(u: User) {
   form.name = u.name
   form.email = u.email
   form.age = u.age ?? 0
+  form.role = isAuthRole(u.role) ? u.role : 'user'
   hobbiesText.value = (u.hobbies ?? []).join(', ')
   showModal.value = true
   formRef.value?.clearValidate()
@@ -302,6 +408,7 @@ async function submit() {
       email: form.email,
       age: Number(form.age) || 0,
       hobbies: toHobbies(hobbiesText.value),
+      role: form.role,
     }
     try {
       if (editingId.value) {
@@ -314,11 +421,43 @@ async function submit() {
       showModal.value = false
       await refresh()
     } catch (e: any) {
-      ElMessage.error(e?.data?.statusMessage || e?.message || '提交失败')
+      ElMessage.error(e?.data?.message || e?.data?.statusMessage || '提交失败')
     } finally {
       saving.value = false
     }
   })
+}
+
+// 权限文案
+function roleLabel(role?: AuthRole) {
+  return AUTH_ROLES.find(item => item.id === role)?.label ?? '普通用户'
+}
+
+// 列表 / 卡片上快捷修改权限
+async function changeRole(u: User, role: AuthRole) {
+  if (!isAuthRole(role) || role === u.role) return
+  if (u.id === currentUserId.value) {
+    ElMessage.warning('不能修改自己的权限')
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      `将「${u.name}」的权限改为「${roleLabel(role)}」？`,
+      '修改权限',
+      { type: 'warning', confirmButtonText: '确认修改', cancelButtonText: '取消' },
+    )
+  } catch {
+    return
+  }
+
+  try {
+    await $fetch(`/api/users/${u.id}`, { method: 'PATCH', body: { role } })
+    ElMessage.success('权限已更新')
+    await refresh()
+  } catch (e: any) {
+    ElMessage.error(e?.data?.message || e?.data?.statusMessage || '修改失败')
+  }
 }
 
 // 删除用户
@@ -338,7 +477,7 @@ async function remove(id: string) {
     ElMessage.success('删除成功')
     await refresh()
   } catch (e: any) {
-    ElMessage.error(e?.data?.statusMessage || e?.message || '删除失败')
+    ElMessage.error(e?.data?.message || e?.data?.statusMessage || '删除失败')
   }
 }
 </script>
@@ -444,6 +583,29 @@ async function remove(id: string) {
   color: $faint;
 }
 
+/* 权限标签（点击弹出下拉） */
+.role {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+
+  :deep(.el-tag) {
+    font-family: $font-mono;
+    letter-spacing: 0.04em;
+  }
+
+  .el-icon {
+    color: $faint;
+  }
+
+  &.is-self {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
 /* ---------------- 移动端卡片列表 ---------------- */
 .list {
   display: grid;
@@ -520,6 +682,13 @@ async function remove(id: string) {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.ucard__role {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 2px;
 }
 
 .ucard__empty {

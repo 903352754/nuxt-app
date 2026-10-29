@@ -5,7 +5,7 @@
 // =============================================================
 import type { H3Event } from 'h3'
 import { SignJWT, jwtVerify } from 'jose'
-import { AUTH_COOKIE, AUTH_MAX_AGE_DAYS, type AuthUser } from '#shared/auth'
+import { AUTH_COOKIE, AUTH_MAX_AGE_DAYS, DEFAULT_AUTH_ROLE, isAuthRole, type AuthUser } from '#shared/auth'
 
 const TOKEN_TTL = `${AUTH_MAX_AGE_DAYS}d`
 const COOKIE_MAX_AGE = AUTH_MAX_AGE_DAYS * 24 * 60 * 60
@@ -29,7 +29,7 @@ function getSecret(event?: H3Event) {
 
 /** 签发 7 天有效的 JWT */
 export async function signAuthToken(user: AuthUser) {
-  return new SignJWT({ name: user.name })
+  return new SignJWT({ name: user.name, role: user.role })
     .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
     .setSubject(user.id)
     .setIssuedAt()
@@ -42,7 +42,11 @@ export async function verifyAuthToken(token: string): Promise<AuthUser | null> {
   try {
     const { payload } = await jwtVerify(token, getSecret(), { algorithms: ['HS256'] })
     if (!payload.sub || typeof payload.name !== 'string' || !payload.name) return null
-    return { id: payload.sub, name: payload.name }
+    return {
+      id: payload.sub,
+      name: payload.name,
+      role: isAuthRole(payload.role) ? payload.role : DEFAULT_AUTH_ROLE,
+    }
   }
   catch {
     return null

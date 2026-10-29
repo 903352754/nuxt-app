@@ -8,6 +8,8 @@ export interface UserDoc {
   email: string
   age: number
   hobbies: string[]
+  /** 权限：admin 管理员 / user 普通用户（缺省按 user 处理） */
+  role?: 'admin' | 'user'
   /** 登录密码哈希（scrypt$salt$hash）；通过 /register 或直接写库创建 */
   passwordHash?: string
   createdAt?: Date

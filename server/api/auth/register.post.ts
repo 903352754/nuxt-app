@@ -8,6 +8,7 @@ import {
   AUTH_NAME_MIN,
   AUTH_PASSWORD_MAX,
   AUTH_PASSWORD_MIN,
+  DEFAULT_AUTH_ROLE,
   type AuthUser,
 } from '#shared/auth'
 import { getUsersCollection } from '../../utils/db'
@@ -91,6 +92,7 @@ export default defineEventHandler(async (event) => {
       email,
       age: 0,
       hobbies: [],
+      role: DEFAULT_AUTH_ROLE,
       passwordHash,
       createdAt: new Date(),
     })
@@ -105,7 +107,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const user: AuthUser = { id: insertedId.toString(), name }
+  const user: AuthUser = { id: insertedId.toString(), name, role: DEFAULT_AUTH_ROLE }
   const token = await signAuthToken(user)
   setAuthCookie(event, token)
 

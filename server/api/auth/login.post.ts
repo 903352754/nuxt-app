@@ -5,6 +5,8 @@
 import {
   AUTH_EMAIL_MAX,
   AUTH_PASSWORD_MAX,
+  DEFAULT_AUTH_ROLE,
+  isAuthRole,
   type AuthUser,
 } from '#shared/auth'
 import { getUsersCollection } from '../../utils/db'
@@ -70,7 +72,11 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const user: AuthUser = { id: doc._id!.toString(), name: doc.name }
+  const user: AuthUser = {
+    id: doc._id!.toString(),
+    name: doc.name,
+    role: isAuthRole(doc.role) ? doc.role : DEFAULT_AUTH_ROLE,
+  }
   const token = await signAuthToken(user)
   setAuthCookie(event, token)
 

@@ -38,6 +38,7 @@
             <div class="who">
               <span class="tech-label">SIGNED IN AS</span>
               <strong class="who__name">{{ user?.name || '未登录' }}</strong>
+              <span class="who__role" :class="{ 'is-admin': isAdmin }">{{ roleLabel }}</span>
             </div>
             <el-dropdown-menu>
               <el-dropdown-item command="logout">退出登录</el-dropdown-item>
@@ -93,19 +94,25 @@ import {
   VideoCamera,
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { AUTH_ROLES } from '#shared/auth'
 
 const route = useRoute()
 const menuOpen = ref(false)
 const clock = useClock()
-const { user, logout } = useAuth()
+const { user, isAdmin, logout } = useAuth()
 
-const nav = [
+// 用户管理仅管理员可见
+const nav = computed(() => [
   { label: '总览', to: '/', icon: HomeFilled, index: '00' },
   { label: '用户管理', to: '/users', icon: User, index: '01' },
   { label: '监控', to: '/monitor', icon: VideoCamera, index: '02' },
   { label: '语音合成', to: '/tts', icon: Microphone, index: '03' },
   { label: '关于', to: '/about', icon: InfoFilled, index: '04' },
-]
+].filter(item => item.to !== '/users' || isAdmin.value))
+
+const roleLabel = computed(() =>
+  AUTH_ROLES.find(role => role.id === user.value?.role)?.label ?? '普通用户',
+)
 
 function isActive(to: string) {
   return to === '/' ? route.path === '/' : route.path.startsWith(to)
@@ -301,6 +308,17 @@ async function onCommand(cmd: string) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.who__role {
+  font-family: $font-mono;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: $faint;
+
+  &.is-admin {
+    color: $primary;
+  }
 }
 
 .menu-btn {

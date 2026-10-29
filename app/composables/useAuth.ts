@@ -7,6 +7,7 @@ import type { AuthUser } from '#shared/auth'
 export function useAuth() {
   const user = useState<AuthUser | null>('auth:user', () => null)
   const resolved = useState<boolean>('auth:resolved', () => false)
+  const isAdmin = computed(() => user.value?.role === 'admin')
 
   // SSR 时需要把浏览器带来的 Cookie 一起转发给 /api/auth/me
   const requestFetch = import.meta.server ? useRequestFetch() : $fetch
@@ -57,5 +58,5 @@ export function useAuth() {
     }
   }
 
-  return { user, resolved, fetchUser, login, register, logout }
+  return { user, resolved, isAdmin, fetchUser, login, register, logout }
 }

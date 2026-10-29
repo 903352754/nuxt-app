@@ -8,6 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "pm2": "pm2 start ecosystem.config.cjs",
+    "set-role": "node scripts/set-role.mjs",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
