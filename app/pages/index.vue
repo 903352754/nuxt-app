@@ -12,7 +12,7 @@
 
         <h1 class="hero__title">XiaoHome</h1>
         <p class="hero__lead">
-          一个入口直达所有内部工具 —— 用户数据、实时视频流与系统信息，
+          一个入口直达所有内部工具 —— 用户数据、实时视频流、语音合成与系统信息，
           桌面、平板、手机同一套界面自适应。
         </p>
 
@@ -52,7 +52,7 @@
           </div>
           <div class="term__row">
             <dt>$ endpoints</dt>
-            <dd class="term__dim">/api/users</dd>
+            <dd class="term__dim">/api/users · /api/tts</dd>
           </div>
         </dl>
 
@@ -102,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-import { InfoFilled, User, VideoCamera } from '@element-plus/icons-vue'
+import { InfoFilled, Microphone, User, VideoCamera } from '@element-plus/icons-vue'
 
 definePageMeta({
   title: '总览',
@@ -113,13 +113,14 @@ interface AppItem {
   desc: string
   to: string
   icon: any
-  tone: 'cyan' | 'indigo' | 'violet'
+  tone: 'cyan' | 'indigo' | 'violet' | 'mint'
 }
 
 const apps: AppItem[] = [
   { name: '用户管理', desc: '登记 · 编辑 · 删除，支持分页与移动端卡片视图', to: '/users', icon: User, tone: 'cyan' },
   { name: '监控', desc: 'HLS 实时视频流接入与多路画面切换', to: '/monitor', icon: VideoCamera, tone: 'indigo' },
-  { name: '关于', desc: '技术栈、运行环境与版本信息', to: '/about', icon: InfoFilled, tone: 'violet' },
+  { name: '语音合成', desc: '文本转语音，多音色合成，在线试听与下载', to: '/tts', icon: Microphone, tone: 'violet' },
+  { name: '关于', desc: '技术栈、运行环境与版本信息', to: '/about', icon: InfoFilled, tone: 'mint' },
 ]
 
 const bp = useBreakpoint()
@@ -366,6 +367,11 @@ const env = computed(() => (import.meta.dev ? 'DEV' : 'PROD'))
 .tile--violet {
   --tone: #c4b5fd;
   --tone-soft: rgba(196, 181, 253, 0.14);
+}
+
+.tile--mint {
+  --tone: #5eead4;
+  --tone-soft: rgba(94, 234, 212, 0.14);
 }
 
 .tile__idx {

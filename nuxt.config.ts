@@ -10,6 +10,8 @@ export default defineNuxtConfig({
   },
   runtimeConfig:{
     mongodbUri: process.env.NUXT_MONGODB_URI || '',
+    // 语音合成（MiMo-V2.5-TTS）：仅服务端可见，不会下发到浏览器
+    mimoApiKey: process.env.NUXT_MIMO_API_KEY || '',
     public:{
       base: '/api'
     }

@@ -2,6 +2,19 @@
 
 Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
+## 模块
+
+| 路由 | 说明 |
+| --- | --- |
+| `/` | 总览：系统信息终端、功能入口 |
+| `/users` | 用户管理：增删改查、分页、移动端卡片视图 |
+| `/monitor` | 监控：HLS（m3u8）多路视频流 |
+| `/tts` | 语音合成：MiMo-V2.5-TTS，9 种预置音色，mp3 / wav 试听与下载 |
+| `/about` | 关于：技术栈与运行环境 |
+
+语音合成通过 `POST /api/tts` 代理调用小米 MiMo 接口，API Key 只存在服务端
+（`NUXT_MIMO_API_KEY`），不会下发到浏览器；接口内置每 IP 每分钟 6 次的限流。
+
 ## 部署（PM2 + Node）
 
 构建产物 `.output` 是自包含的（依赖已内联到 `.output/server/node_modules`），
@@ -11,7 +24,7 @@ Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduct
 nuxt-app/
 ├── .output/              # 构建产物
 ├── ecosystem.config.cjs  # PM2 配置
-└── .env                  # NUXT_MONGODB_URI（chmod 600，切勿提交）
+└── .env                  # NUXT_MONGODB_URI、NUXT_MIMO_API_KEY（chmod 600，切勿提交）
 ```
 
 ```bash

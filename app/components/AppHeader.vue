@@ -85,6 +85,7 @@ import {
   Expand,
   HomeFilled,
   InfoFilled,
+  Microphone,
   User,
   UserFilled,
   VideoCamera,
@@ -99,7 +100,8 @@ const nav = [
   { label: '总览', to: '/', icon: HomeFilled, index: '00' },
   { label: '用户管理', to: '/users', icon: User, index: '01' },
   { label: '监控', to: '/monitor', icon: VideoCamera, index: '02' },
-  { label: '关于', to: '/about', icon: InfoFilled, index: '03' },
+  { label: '语音合成', to: '/tts', icon: Microphone, index: '03' },
+  { label: '关于', to: '/about', icon: InfoFilled, index: '04' },
 ]
 
 function isActive(to: string) {
