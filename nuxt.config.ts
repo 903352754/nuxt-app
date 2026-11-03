@@ -17,10 +17,15 @@ export default defineNuxtConfig({
     // 登录会话 JWT 签名密钥（HS256），生产环境必须配置，开发环境有兜底值
     jwtSecret: process.env.NUXT_JWT_SECRET || '',
     public:{
-      base: '/api'
+      base: '/api',
+      // 纯静态托管（GitHub Pages）构建时置为 true：
+      // 没有服务端 API，跳过登录校验，直接渲染页面
+      staticMode: process.env.NUXT_PUBLIC_STATIC_MODE === 'true'
     }
   },
   app:{
+    // GitHub Pages 项目页部署在 /<repo>/ 下，构建时通过环境变量注入
+    baseURL: process.env.NUXT_APP_BASE_URL || '/',
     // 页面切换动效（样式见 assets/scss/main.scss）
     pageTransition:{ name:'page', mode:'out-in' },
     head:{

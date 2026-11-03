@@ -1,6 +1,9 @@
 // 全局路由守卫：所有页面都要求登录，/login、/register 除外（已登录则回首页）
 // /users 仅管理员可进，进入前强制刷新一次角色，改权限后立即生效
 export default defineNuxtRouteMiddleware(async (to) => {
+  // 静态托管没有 /api，无法校验登录态，直接放行页面
+  if (useRuntimeConfig().public.staticMode) return
+
   const { user, resolved, fetchUser } = useAuth()
 
   if (!resolved.value) await fetchUser()

@@ -79,10 +79,24 @@ pm2 save && pm2 startup     # 开机自启，按提示复制执行输出的命�
 - `PORT` / `HOST` 可在 `.env` 或 shell 中覆盖，默认 `3000` / `0.0.0.0`
 - **只用单实例**（不要 `-i max`）：应用用进程内缓存持有 Mongo 连接池
 - MongoDB Atlas 的 Network Access 必须放行服务器出口 IP
-- 不要用 `npm run generate`，本项目有服务端 API（`/api/**`）
+- 完整功能请用 `npm run build`；`npm run generate` 只用于 GitHub Pages 静态演示（见下一节）
 - `ecosystem.config.cjs` 与 `.env` 都含凭据，不要公开存放
 
 在线免费 mongodb 数据库: https://www.mongodb.com/zh-cn/products/platform
+
+## 部署（GitHub Pages 纯静态）
+
+`.github/workflows/deploy-pages.yml` 会在每次推送到 `master` 时自动构建并发布到 GitHub Pages。
+
+- 地址：https://903352754.github.io/nuxt-app/
+- 构建：`NUXT_APP_BASE_URL=/nuxt-app/ NUXT_PUBLIC_STATIC_MODE=true npm run generate`
+- 产物：`.output/public`
+- 首次使用需在仓库 **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**
+
+**限制**：Pages 只托管静态文件，没有 Node 运行时，`server/api/**` 不会部署。
+页面可以正常浏览，但登录 / 注册 / 用户管理 / 语音合成等依赖接口的功能不可用
+（`NUXT_PUBLIC_STATIC_MODE=true` 只是跳过登录重定向，让页面能渲染出来）。
+需要完整功能请使用上面的 PM2 部署方式。
 
 Make sure to install dependencies:
 

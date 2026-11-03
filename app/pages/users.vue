@@ -332,8 +332,11 @@ const rules: FormRules = {
   role: [{ required: true, message: '请选择权限', trigger: 'change' }],
 }
 
-// 获取用户列表
-const { data, pending, error, refresh } = await useFetch<User[]>('/api/users')
+// 获取用户列表（静态托管没有 /api，构建和运行时都不发请求）
+const staticMode = useRuntimeConfig().public.staticMode
+const { data, pending, error, refresh } = await useFetch<User[]>('/api/users', {
+  immediate: !staticMode,
+})
 const users = computed(() => data.value ?? [])
 
 // 错误信息（优先取后端返回的 statusMessage）

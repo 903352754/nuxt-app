@@ -40,6 +40,10 @@ async function resolveRole(userId: string) {
 }
 
 export default defineEventHandler(async (event) => {
+  // 纯静态构建没有服务端，若仍做重定向，预渲染出来的每个页面都只会是
+  // 跳往 /login 的空壳，因此静态模式下跳过鉴权
+  if (useRuntimeConfig(event).public.staticMode) return
+
   const fullPath = event.path || '/'
   const path = fullPath.split('?')[0] || '/'
 
